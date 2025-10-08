@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT-Based Smart Crop Growth Monitoring</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      color: #2e7d32;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      background-image: url('farm.jpg'); 
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    header {
+      background-color: rgba(67, 160, 71, 0.9);
+      color: white;
+      padding: 20px 0;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .data-box {
+      background: rgba(255, 255, 255, 0.85);
+      width: 360px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+    .value { font-size: 18px; margin: 10px 0; }
+    .advice {
+      background-color: rgba(200, 230, 201, 0.9);
+      padding: 15px;
+      border-radius: 10px;
+      width: 380px;
+      margin: 20px auto;
+      font-weight: bold;
+      text-align: left;
+    }
+    table { width: 90%; margin: 10px auto; border-collapse: collapse; text-align: center; }
+    th, td { padding: 8px; border: 1px solid #2e7d32; }
+    th { background-color: #43a047; color: white; }
+    .highlight { background-color: #ffeb3b !important; color: black; font-weight: bold; }
+    footer { background-color: rgba(67, 160, 71, 0.9); color: white; padding: 10px 0; margin-top: 30px; }
+  </style>
+</head>
+<body>
+  <header>
+    IoT-Based Smart Crop Growth Monitoring & Advisory Platform
+  </header>
+
+  <!-- Live Sensor Data -->
+  <div class="data-box">
+    <div class="value">🌡️ Temperature: <span id="temp">--</span> °C</div>
+    <div class="value">💧 Humidity: <span id="humid">--</span> %</div>
+    <div class="value">🌱 Soil Moisture: <span id="moist">--</span> %</div>
+  </div>
+
+  <!-- Advisory + Precautions -->
+  <div class="advice" id="adviceBox">Analyzing crop conditions...</div>
+
+  <!-- Chart -->
+  <div class="data-box">
+    <canvas id="sensorChart" width="300" height="200"></canvas>
+  </div>
+
+  <!-- Simplified Season Table -->
+  <div class="data-box">
+    <h3>Current Season Advisory</h3>
+    <table id="seasonTable">
+      <tr><th>Month</th><th>Season</th><th>Suggested Crops</th></tr>
+      <tr><td>October - December</td><td>Winter</td><td>Wheat, Carrot, Cauliflower</td></tr>
+      <tr><td>January - March</td><td>Winter / Early Summer</td><td>Wheat, Tomato, Millets</td></tr>
+      <tr><td>April - June</td><td>Summer</td><td>Okra, Tomato, Millets</td></tr>
+      <tr><td>July - September</td><td>Monsoon</td><td>Rice, Maize, Sugarcane</td></tr>
+    </table>
+  </div>
+
+  <footer>
+    <p>Developed by : <b>GiriPrakash</b></p>
+    <p>Contact To : <b>giriselvaraj46@gmail.com</b></p>
+  </footer>
+
+  <script>
+    // Update dummy sensor data and advisory
+    function updateData() {
+      let temp = Math.floor(Math.random() * (38 - 25) + 25);
+      let humid = Math.floor(Math.random() * (90 - 50) + 50);
+      let moist = Math.floor(Math.random() * (100 - 10) + 10);
+      document.getElementById("temp").innerText = temp;
+      document.getElementById("humid").innerText = humid;
+      document.getElementById("moist").innerText = moist;
+
+      let advice = "";
+      if (moist < 40) advice = "⚠️ Soil is dry – Please water the crops.\n💡 Tip: Water early morning or late evening.";
+      else if (temp > 35) advice = "☀️ High temperature – Provide shade.\n💡 Tip: Cover plants with cloth or net.";
+      else if (humid < 40) advice = "💧 Low humidity – Use mist irrigation.\n💡 Tip: Mist morning & evening.";
+      else advice = "✅ Conditions are optimal!\n💡 Tip: Monitor soil moisture daily.";
+      document.getElementById("adviceBox").innerText = advice;
+
+      // Update chart data dynamically
+      addChartData(sensorChart, temp, humid, moist);
+    }
+    setInterval(updateData, 3000);
+
+    // Chart.js setup
+    let ctx = document.getElementById('sensorChart').getContext('2d');
+    let sensorChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['0s','3s','6s','9s','12s','15s'],
+        datasets: [
+          { label: 'Temperature (°C)', data: [28,30,32,31,29,30], borderColor: 'red', fill: false },
+          { label: 'Humidity (%)', data: [60,55,58,62,57,59], borderColor: 'blue', fill: false },
+          { label: 'Soil Moisture (%)', data: [45,40,35,38,42,39], borderColor: 'green', fill: false }
+        ]
+      },
+      options: { responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true}} }
+    });
+
+    function addChartData(chart, temp, humid, moist){
+      chart.data.labels.push(new Date().toLocaleTimeString().split(" ")[0]);
+      chart.data.labels.shift();
+      chart.data.datasets[0].data.push(temp);
+      chart.data.datasets[0].data.shift();
+      chart.data.datasets[1].data.push(humid);
+      chart.data.datasets[1].data.shift();
+      chart.data.datasets[2].data.push(moist);
+      chart.data.datasets[2].data.shift();
+      chart.update();
+    }
+
+    // Highlight current season row
+    function highlightSeason() {
+      const month = new Date().getMonth() + 1; // Jan=1
+      let seasonRow;
+      if(month>=10 || month<=12) seasonRow=0; // Oct-Dec
+      else if(month>=1 && month<=3) seasonRow=1; // Jan-Mar
+      else if(month>=4 && month<=6) seasonRow=2; // Apr-Jun
+      else if(month>=7 && month<=9) seasonRow=3; // Jul-Sep
+
+      const table = document.getElementById("seasonTable");
+      for(let i=1;i<table.rows.length;i++){
+        table.rows[i].classList.remove("highlight");
+      }
+      table.rows[seasonRow+1].classList.add("highlight");
+    }
+    highlightSeason();
+  </script>
+</body>
+</html>
